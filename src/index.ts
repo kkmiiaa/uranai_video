@@ -87,7 +87,7 @@ export const RemotionRoot: React.FC = () => {
     React.createElement(Composition, {
       id: 'DailyFortune',
       component: DailyFortune,
-      durationInFrames: 240,
+      durationInFrames: 900,
       fps: 30,
       width: 1080,
       height: 1920,

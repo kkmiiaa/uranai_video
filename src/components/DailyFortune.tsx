@@ -39,7 +39,7 @@ const s = (value: number) => value * SCALE;
 
 export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
   const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
+  const {fps, durationInFrames} = useVideoConfig();
   const fontUrl = staticFile('fonts/ZenMaruGothic-japanese-400.woff2');
   const [fontHandle] = useState(() => delayRender('load-zen-maru-gothic'));
 
@@ -103,9 +103,14 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
   const itemHeight = s(120);
   const contentHeight = items.length * itemHeight;
   const scrollDistance = Math.max(0, contentHeight - listHeight + s(24));
-  const scrollY = interpolate(frame, [0, 479], [0, -scrollDistance], {
-    extrapolateRight: 'clamp',
-  });
+  const scrollY = interpolate(
+    frame,
+    [0, durationInFrames - 1],
+    [0, -scrollDistance],
+    {
+      extrapolateRight: 'clamp',
+    }
+  );
 
   return (
     <AbsoluteFill
