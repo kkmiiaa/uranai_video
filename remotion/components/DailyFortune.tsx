@@ -238,6 +238,7 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
           }}
         >
           <div style={{transform: `translateY(${scrollY}px)`}}>
+            <div style={{height: s(30)}} />
             {sortedItems.map((item, index) => {
               const isLast = index === sortedItems.length - 1;
               return (
