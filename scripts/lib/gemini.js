@@ -1,26 +1,19 @@
-const {ZODIAC_BY_SIGN} = require('./zodiac');
+const fs = require('fs');
+const path = require('path');
+const {ZODIAC_BY_SIGN, ZODIAC_BY_EN} = require('./zodiac');
 
 const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
 const API_ROOT = 'https://generativelanguage.googleapis.com/v1beta';
 
-const buildPrompt = (date) => {
-  return [
-    'You are a fortune-telling generator for a Japanese zodiac ranking video.',
-    'Return ONLY valid JSON. No markdown.',
-    'Output format:',
-    '{',
-    '  "date": "YYYY-MM-DD",',
-    '  "items": [',
-    '    {"sign": "牡羊座", "rank": 1, "text": "..."},',
-    '    ... 12 items total with ranks 1-12',
-    '  ]',
-    '}',
-    'Rules:',
-    '- Use exactly these 12 signs: 牡羊座, 牡牛座, 双子座, 蟹座, 獅子座, 乙女座, 天秤座, 蠍座, 射手座, 山羊座, 水瓶座, 魚座',
-    '- Each text is 25-30 Japanese characters.',
-    '- Keep tone gentle and positive for women-oriented astrology accounts.',
-    `- date must be "${date}".`,
-  ].join('\n');
+const DEFAULT_PROMPT_PATH = path.join(
+  process.cwd(),
+  'prompts',
+  'gemini_fortune.txt'
+);
+
+const buildPrompt = (date, promptPath = DEFAULT_PROMPT_PATH) => {
+  const template = fs.readFileSync(promptPath, 'utf8');
+  return template.replaceAll('{date}', date);
 };
 
 const extractJson = (text) => {
@@ -42,11 +35,12 @@ const normalizeItems = (items) => {
 
   const usedRanks = new Set();
   return items.map((item) => {
-    const sign = item.sign;
+    const sign = String(item.sign || '').trim();
     const rank = Number(item.rank);
     const text = String(item.text || '').trim();
 
-    if (!ZODIAC_BY_SIGN.has(sign)) {
+    const meta = ZODIAC_BY_SIGN.get(sign) || ZODIAC_BY_EN.get(sign);
+    if (!meta) {
       throw new Error(`Unknown sign: ${sign}`);
     }
     if (!Number.isInteger(rank) || rank < 1 || rank > 12) {
@@ -57,7 +51,6 @@ const normalizeItems = (items) => {
     }
     usedRanks.add(rank);
 
-    const meta = ZODIAC_BY_SIGN.get(sign);
     return {
       rank,
       icon: meta.icon,
@@ -67,7 +60,12 @@ const normalizeItems = (items) => {
   });
 };
 
-const generateFortuneJson = async ({date, apiKey, model = DEFAULT_MODEL}) => {
+const generateFortuneJson = async ({
+  date,
+  apiKey,
+  model = DEFAULT_MODEL,
+  promptPath,
+}) => {
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY is required');
   }
@@ -77,7 +75,7 @@ const generateFortuneJson = async ({date, apiKey, model = DEFAULT_MODEL}) => {
     contents: [
       {
         role: 'user',
-        parts: [{text: buildPrompt(date)}],
+        parts: [{text: buildPrompt(date, promptPath)}],
       },
     ],
     generationConfig: {
@@ -111,6 +109,8 @@ const generateFortuneJson = async ({date, apiKey, model = DEFAULT_MODEL}) => {
 
   return {
     date: json.date || date,
+    daily_number: json.daily_number,
+    daily_number_meaning: json.daily_number_meaning,
     items,
   };
 };

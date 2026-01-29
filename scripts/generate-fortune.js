@@ -27,9 +27,10 @@ const main = async () => {
   const date = ensureDate(args.date);
   const outPath = args.out || path.join('tmp', `fortune-${date}.json`);
   const model = args.model || DEFAULT_MODEL;
+  const promptPath = args.prompt;
   const apiKey = process.env.GEMINI_API_KEY;
 
-  const json = await generateFortuneJson({date, apiKey, model});
+  const json = await generateFortuneJson({date, apiKey, model, promptPath});
   await fs.mkdir(path.dirname(outPath), {recursive: true});
   await fs.writeFile(outPath, JSON.stringify(json, null, 2), 'utf8');
   process.stdout.write(`Wrote ${outPath}\n`);

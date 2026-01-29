@@ -51,12 +51,13 @@ const main = async () => {
   const entry = args.entry || 'remotion/index.ts';
   const composition = args.composition || 'DailyFortune';
   const keepJson = args['keep-json'] !== 'false';
+  const promptPath = args.prompt;
 
   await fs.mkdir(propsDir, {recursive: true});
 
   for (const date of dates) {
     process.stdout.write(`\n[${date}] generating JSON...\n`);
-    const json = await generateFortuneJson({date, apiKey, model});
+    const json = await generateFortuneJson({date, apiKey, model, promptPath});
     const propsPath = path.join(propsDir, `fortune-${date}.json`);
     await fs.writeFile(propsPath, JSON.stringify(json, null, 2), 'utf8');
 

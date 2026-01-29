@@ -1,0 +1,119 @@
+name: Daily Fortune Video
+
+on:
+  schedule:
+    # 07:00 JST (22:00 UTC previous day)
+    - cron: '0 22 * * *'
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Target date (YYYY-MM-DD) in JST'
+        required: false
+
+jobs:
+  build-and-render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      date: ${{ steps.date.outputs.date }}
+      gcs_url: ${{ steps.gcs.outputs.url }}
+      drive_download_url: ${{ steps.drive.outputs.download_url }}
+    env:
+      TZ: Asia/Tokyo
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve date
+        id: date
+        run: |
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            echo "date=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
+          else
+            echo "date=$(date +%F)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate and render
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          mkdir -p out
+          npm run orchestrate -- --date ${{ steps.date.outputs.date }} --out-dir out --prompt prompts/gemini_fortune.txt
+
+      - name: Upload to Google Cloud Storage
+        env:
+          GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          node scripts/upload-gcs.js \
+            --file out/fortune-${{ steps.date.outputs.date }}.mp4 \
+            --key fortune-${{ steps.date.outputs.date }}.mp4 \
+            --out out/gcs-${{ steps.date.outputs.date }}.json
+
+      - name: Read GCS URL
+        id: gcs
+        run: |
+          URL=$(node -e "const d=require('./out/gcs-${{ steps.date.outputs.date }}.json'); console.log(d.url)")
+          echo \"url=$URL\" >> $GITHUB_OUTPUT
+
+      - name: Upload to Google Drive (manual backup)
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+        run: |
+          node scripts/upload-drive.js \
+            --file out/fortune-${{ steps.date.outputs.date }}.mp4 \
+            --name fortune-${{ steps.date.outputs.date }}.mp4 \
+            --out out/drive-${{ steps.date.outputs.date }}.json
+
+      - name: Read Drive URL
+        id: drive
+        run: |
+          DOWNLOAD_URL=$(node -e "const d=require('./out/drive-${{ steps.date.outputs.date }}.json'); console.log(d.downloadUrl)")
+          echo \"download_url=$DOWNLOAD_URL\" >> $GITHUB_OUTPUT
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fortune-${{ steps.date.outputs.date }}
+          path: |
+            out/fortune-${{ steps.date.outputs.date }}.mp4
+            out/props/fortune-${{ steps.date.outputs.date }}.json
+            out/gcs-${{ steps.date.outputs.date }}.json
+            out/drive-${{ steps.date.outputs.date }}.json
+          if-no-files-found: error
+
+  publish-instagram:
+    needs: build-and-render
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Publish to Instagram
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_API_VERSION: ${{ secrets.IG_API_VERSION }}
+        run: |
+          node scripts/ig-publish.js \
+            --video-url \"${{ needs.build-and-render.outputs.gcs_url }}\" \
+            --caption \"${{ needs.build-and-render.outputs.date }} の12星座ランキング\"

@@ -7,7 +7,10 @@
     "render": "remotion render remotion/index.ts DailyFortune out.mp4 --props=fortune.json",
     "generate:fortune": "node scripts/generate-fortune.js",
     "render:video": "node scripts/render-video.js",
-    "orchestrate": "node scripts/orchestrate.js"
+    "orchestrate": "node scripts/orchestrate.js",
+    "upload:drive": "node scripts/upload-drive.js",
+    "upload:gcs": "node scripts/upload-gcs.js",
+    "publish:ig": "node scripts/ig-publish.js"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +18,8 @@
   "description": "",
   "dependencies": {
     "@remotion/google-fonts": "^4.0.410",
+    "@google-cloud/storage": "^7.16.0",
+    "googleapis": "^144.0.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "remotion": "^4.0.410"
