@@ -60,7 +60,7 @@ jobs:
         run: |
           node scripts/upload-gcs.js \
             --file out/fortune-${{ steps.date.outputs.date }}.mp4 \
-            --key fortune-${{ steps.date.outputs.date }}.mp4 \
+            --key fortune-${{ steps.date.outputs.date }}-${{ github.run_id }}.mp4 \
             --out out/gcs-${{ steps.date.outputs.date }}.json
 
       - name: Read GCS URL
@@ -76,7 +76,7 @@ jobs:
         run: |
           node scripts/upload-drive.js \
             --file out/fortune-${{ steps.date.outputs.date }}.mp4 \
-            --name fortune-${{ steps.date.outputs.date }}.mp4 \
+            --name fortune-${{ steps.date.outputs.date }}-${{ github.run_id }}.mp4 \
             --out out/drive-${{ steps.date.outputs.date }}.json
 
       - name: Read Drive URL
