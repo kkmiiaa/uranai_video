@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "preview": "remotion preview src/index.ts",
-    "render": "remotion render src/index.ts DailyFortune out.mp4 --props=fortune.json"
+    "preview": "remotion preview remotion/index.ts",
+    "render": "remotion render remotion/index.ts DailyFortune out.mp4 --props=fortune.json",
+    "generate:fortune": "node scripts/generate-fortune.js",
+    "render:video": "node scripts/render-video.js",
+    "orchestrate": "node scripts/orchestrate.js"
   },
   "keywords": [],
   "author": "",
