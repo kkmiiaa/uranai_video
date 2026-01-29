@@ -101,11 +101,14 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
   const dateSize = s(18);
   const titleMargin = s(12);
   const titleGap = s(16);
+  const captionSize = s(11);
+  const captionGap = s(8);
   const cardMarginX = s(24);
-  const safeTop = (1920 - (1080 * 5) / 4) / 2 - s(12);
-  const safeBottom = safeTop;
+  const baseSafeY = (1920 - (1080 * 5) / 4) / 2
+  const safeTop = baseSafeY + s(30);
+  const safeBottom = baseSafeY - s(10);
   const cardTop = safeTop + titleSize + titleMargin + titleGap;
-  const cardBottom = safeBottom;
+  const cardBottom = safeBottom + captionSize + captionGap;
   const cardPaddingX = s(24);
   const cardPaddingY = 0;
   const scrollSpacer = s(24);
@@ -172,6 +175,7 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
           alignItems: 'center',
           justifyContent: 'center',
           gap: s(10),
+          color: '#DDDDDD',
         }}
       >
         <Img
@@ -191,13 +195,17 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
           position: 'absolute',
           left: cardMarginX,
           right: cardMarginX,
-          top: safeTop - s(50),
-          fontSize: s(22),
+          top: safeTop - s(40),
+          fontSize: s(20),
           fontWeight: 600,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           letterSpacing: '0.02em',
+          textDecoration: 'underline',
+          textDecorationColor: 'rgba(255, 255, 255, 1)',
+          textDecorationThickness: s(1.5),
+          textUnderlineOffset: s(10),
         }}
       >
         今日いちばん運がいい星座は…？
@@ -230,18 +238,6 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
           }}
         >
           <div style={{transform: `translateY(${scrollY}px)`}}>
-            <div
-              style={{
-                height: scrollSpacer,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: s(14),
-                letterSpacing: '0.02em',
-              }}
-            >
-              今日いちばん運がいい星座は…？
-            </div>
             {sortedItems.map((item, index) => {
               const isLast = index === sortedItems.length - 1;
               return (
@@ -318,6 +314,22 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
             <div style={{height: scrollSpacer}} />
           </div>
         </div>
+      </div>
+
+      <div
+        style={{
+          position: 'absolute',
+          left: cardMarginX,
+          right: cardMarginX,
+          bottom: safeBottom - s(10),
+          fontSize: captionSize,
+          color: '#DDDDDD',
+          textAlign: 'center',
+          opacity: 0.85,
+          letterSpacing: '0.02em',
+        }}
+      >
+        占ai｜複数占術をAIでまとめて毎日お届け
       </div>
     </AbsoluteFill>
   );
