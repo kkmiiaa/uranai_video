@@ -19,6 +19,9 @@ on:
       days:
         description: 'Number of days for batch (e.g. 31)'
         required: false
+      end_date:
+        description: 'Batch end date (YYYY-MM-DD) in JST'
+        required: false
 
 jobs:
   build-and-render:
@@ -46,7 +49,19 @@ jobs:
       - name: Resolve date / range
         id: date
         run: |
-          if [ -n "${{ github.event.inputs.start_date }}" ] && [ -n "${{ github.event.inputs.days }}" ]; then
+          if [ -n "${{ github.event.inputs.start_date }}" ] && [ -n "${{ github.event.inputs.end_date }}" ]; then
+            START="${{ github.event.inputs.start_date }}"
+            END="${{ github.event.inputs.end_date }}"
+            START_SEC=$(date -d "$START" +%s)
+            END_SEC=$(date -d "$END" +%s)
+            if [ "$END_SEC" -lt "$START_SEC" ]; then
+              echo "end_date must be >= start_date" >&2
+              exit 1
+            fi
+            DAYS=$(( (END_SEC - START_SEC) / 86400 + 1 ))
+            echo "start_date=$START" >> $GITHUB_OUTPUT
+            echo "days=$DAYS" >> $GITHUB_OUTPUT
+          elif [ -n "${{ github.event.inputs.start_date }}" ] && [ -n "${{ github.event.inputs.days }}" ]; then
             echo "start_date=${{ github.event.inputs.start_date }}" >> $GITHUB_OUTPUT
             echo "days=${{ github.event.inputs.days }}" >> $GITHUB_OUTPUT
           elif [ -n "${{ github.event.inputs.date }}" ]; then
