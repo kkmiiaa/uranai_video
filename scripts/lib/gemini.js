@@ -16,15 +16,25 @@ const buildPrompt = (date, promptPath = DEFAULT_PROMPT_PATH) => {
   return template.replaceAll('{date}', date);
 };
 
-const extractJson = (text) => {
+const extractJson = (text, rawOutPath) => {
   try {
     return JSON.parse(text);
   } catch (_err) {
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) {
+      if (rawOutPath) {
+        require('fs').writeFileSync(rawOutPath, text, 'utf8');
+      }
       throw new Error('Gemini response did not contain JSON');
     }
-    return JSON.parse(match[0]);
+    try {
+      return JSON.parse(match[0]);
+    } catch (err) {
+      if (rawOutPath) {
+        require('fs').writeFileSync(rawOutPath, match[0], 'utf8');
+      }
+      throw err;
+    }
   }
 };
 
@@ -65,6 +75,7 @@ const generateFortuneJson = async ({
   apiKey,
   model = DEFAULT_MODEL,
   promptPath,
+  rawOutputPath,
 }) => {
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY is required');
@@ -104,7 +115,7 @@ const generateFortuneJson = async ({
     .map((p) => p.text)
     .join('');
 
-  const json = extractJson(text);
+  const json = extractJson(text, rawOutputPath);
   const items = normalizeItems(json.items);
 
   return {

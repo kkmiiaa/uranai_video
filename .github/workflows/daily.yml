@@ -67,12 +67,18 @@ jobs:
       - name: Generate and render
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          DRIVE_OAUTH_CLIENT_ID: ${{ secrets.DRIVE_OAUTH_CLIENT_ID }}
+          DRIVE_OAUTH_CLIENT_SECRET: ${{ secrets.DRIVE_OAUTH_CLIENT_SECRET }}
+          DRIVE_OAUTH_REFRESH_TOKEN: ${{ secrets.DRIVE_OAUTH_REFRESH_TOKEN }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
         run: |
           mkdir -p out
           if [ -n "${{ steps.date.outputs.start_date }}" ]; then
-            npm run orchestrate -- --start ${{ steps.date.outputs.start_date }} --days ${{ steps.date.outputs.days }} --out-dir out --prompt prompts/gemini_fortune.txt
+            npm run orchestrate -- --start ${{ steps.date.outputs.start_date }} --days ${{ steps.date.outputs.days }} --out-dir out --prompt prompts/gemini_fortune.txt --upload-gcs true --upload-drive true --cleanup true --upload-suffix ${{ github.run_id }}
           else
-            npm run orchestrate -- --date ${{ steps.date.outputs.date }} --out-dir out --prompt prompts/gemini_fortune.txt
+            npm run orchestrate -- --date ${{ steps.date.outputs.date }} --out-dir out --prompt prompts/gemini_fortune.txt --upload-gcs true --upload-drive true --upload-suffix ${{ github.run_id }}
           fi
 
       - name: Upload to Google Cloud Storage
@@ -88,27 +94,16 @@ jobs:
       - name: Read GCS URL
         id: gcs
         run: |
-          URL=$(node -e "const d=require('./out/gcs-${{ steps.date.outputs.date }}.json'); console.log(d.url)")
-          echo \"url=$URL\" >> $GITHUB_OUTPUT
-
-      - name: Drive backup (OAuth refresh token)
-        env:
-          DRIVE_OAUTH_CLIENT_ID: ${{ secrets.DRIVE_OAUTH_CLIENT_ID }}
-          DRIVE_OAUTH_CLIENT_SECRET: ${{ secrets.DRIVE_OAUTH_CLIENT_SECRET }}
-          DRIVE_OAUTH_REFRESH_TOKEN: ${{ secrets.DRIVE_OAUTH_REFRESH_TOKEN }}
-          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
-        run: |
-          node scripts/upload-drive-refresh.js \
-            --file out/fortune-${{ steps.date.outputs.date }}.mp4 \
-            --name fortune-${{ steps.date.outputs.date }}-${{ github.run_id }}.mp4 \
-            --out out/drive-${{ steps.date.outputs.date }}.json
+          if [ -f "./out/gcs-${{ steps.date.outputs.date }}.json" ]; then
+            URL=$(node -e "const d=require('./out/gcs-${{ steps.date.outputs.date }}.json'); console.log(d.url)")
+            echo \"url=$URL\" >> $GITHUB_OUTPUT
+          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: fortune-${{ steps.date.outputs.date }}
           path: |
-            out/fortune-${{ steps.date.outputs.date }}.mp4
             out/props/fortune-${{ steps.date.outputs.date }}.json
             out/gcs-${{ steps.date.outputs.date }}.json
             out/drive-${{ steps.date.outputs.date }}.json
