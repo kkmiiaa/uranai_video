@@ -9,6 +9,8 @@
     "render:video": "node scripts/render-video.js",
     "orchestrate": "node scripts/orchestrate.js",
     "upload:drive": "node scripts/upload-drive.js",
+    "upload:drive-oauth": "node scripts/upload-drive-oauth.js",
+    "upload:drive-refresh": "node scripts/upload-drive-refresh.js",
     "upload:gcs": "node scripts/upload-gcs.js",
     "publish:ig": "node scripts/ig-publish.js"
   },

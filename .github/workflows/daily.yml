@@ -69,21 +69,17 @@ jobs:
           URL=$(node -e "const d=require('./out/gcs-${{ steps.date.outputs.date }}.json'); console.log(d.url)")
           echo \"url=$URL\" >> $GITHUB_OUTPUT
 
-      - name: Upload to Google Drive (manual backup)
+      - name: Drive backup (OAuth refresh token)
         env:
-          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          DRIVE_OAUTH_CLIENT_ID: ${{ secrets.DRIVE_OAUTH_CLIENT_ID }}
+          DRIVE_OAUTH_CLIENT_SECRET: ${{ secrets.DRIVE_OAUTH_CLIENT_SECRET }}
+          DRIVE_OAUTH_REFRESH_TOKEN: ${{ secrets.DRIVE_OAUTH_REFRESH_TOKEN }}
           GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
         run: |
-          node scripts/upload-drive.js \
+          node scripts/upload-drive-refresh.js \
             --file out/fortune-${{ steps.date.outputs.date }}.mp4 \
             --name fortune-${{ steps.date.outputs.date }}-${{ github.run_id }}.mp4 \
             --out out/drive-${{ steps.date.outputs.date }}.json
-
-      - name: Read Drive URL
-        id: drive
-        run: |
-          DOWNLOAD_URL=$(node -e "const d=require('./out/drive-${{ steps.date.outputs.date }}.json'); console.log(d.downloadUrl)")
-          echo \"download_url=$DOWNLOAD_URL\" >> $GITHUB_OUTPUT
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
