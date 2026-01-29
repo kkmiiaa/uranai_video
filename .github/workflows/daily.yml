@@ -9,6 +9,10 @@ on:
       date:
         description: 'Target date (YYYY-MM-DD) in JST'
         required: false
+      publish_instagram:
+        description: 'Publish to Instagram (true/false)'
+        required: false
+        default: 'false'
 
 jobs:
   build-and-render:
@@ -95,6 +99,7 @@ jobs:
   publish-instagram:
     needs: build-and-render
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_instagram == 'true' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
