@@ -42,6 +42,10 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
   const {fps, durationInFrames} = useVideoConfig();
   const fontUrl = staticFile('fonts/ZenMaruGothic-japanese-400.woff2');
   const [fontHandle] = useState(() => delayRender('load-zen-maru-gothic'));
+  const sortedItems = useMemo(
+    () => [...items].sort((a, b) => b.rank - a.rank),
+    [items]
+  );
 
   useEffect(() => {
     const font = new FontFace(
@@ -86,23 +90,32 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
   }, [fps]);
 
   const periodFrames = Math.round(10 * fps);
+  const moonPulse = interpolate(
+    frame % periodFrames,
+    [0, periodFrames / 2, periodFrames],
+    [0.92, 1, 0.92]
+  );
 
 
-  const cardMarginX = s(24);
-  const cardMarginY = s(75);
-  const cardPaddingX = s(24);
-  const cardPaddingY = s(32);
-  const titleSize = s(16);
-  const dateSize = s(20);
+  const titleSize = s(14);
+  const dateSize = s(18);
   const titleMargin = s(12);
   const titleGap = s(16);
+  const cardMarginX = s(24);
+  const safeTop = (1920 - (1080 * 5) / 4) / 2 - s(12);
+  const safeBottom = safeTop;
+  const cardTop = safeTop + titleSize + titleMargin + titleGap;
+  const cardBottom = safeBottom;
+  const cardPaddingX = s(24);
+  const cardPaddingY = 0;
+  const scrollSpacer = s(24);
 
-  const cardHeight = 1920 - cardMarginY * 2;
+  const cardHeight = 1920 - cardTop - cardBottom;
   const listHeight = cardHeight - cardPaddingY * 2;
 
   const itemHeight = s(120);
-  const contentHeight = items.length * itemHeight;
-  const scrollDistance = Math.max(0, contentHeight - listHeight + s(24));
+  const contentHeight = sortedItems.length * itemHeight + scrollSpacer * 2;
+  const scrollDistance = Math.max(0, contentHeight - listHeight);
   const scrollY = interpolate(
     frame,
     [0, durationInFrames - 1],
@@ -153,13 +166,24 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
           position: 'absolute',
           left: cardMarginX,
           right: cardMarginX,
-          top: cardMarginY - titleSize - titleMargin - titleGap,
+          top: safeTop + s(8),
           fontSize: titleSize,
-          textAlign: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: s(10),
         }}
       >
-        <span style={{fontSize: dateSize}}>{formattedDate}</span>
-        の12星座ランキング
+        <Img
+          src={staticFile('assets/moon.png')}
+          style={{
+            width: s(20),
+            height: s(20),
+            transform: `translateY(${s(2)}px) scale(${moonPulse})`,
+            filter: `drop-shadow(0 0 ${s(5)}px rgba(253, 230, 138, 0.6)) drop-shadow(0 0 ${s(9)}px rgba(253, 230, 138, 0.4))`,
+          }}
+        />
+        {formattedDate}の12星座ランキング
       </div>
 
       <div
@@ -167,8 +191,25 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
           position: 'absolute',
           left: cardMarginX,
           right: cardMarginX,
-          top: cardMarginY,
-          bottom: cardMarginY,
+          top: safeTop - s(50),
+          fontSize: s(22),
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          letterSpacing: '0.02em',
+        }}
+      >
+        今日いちばん運がいい星座は…？
+      </div>
+
+      <div
+        style={{
+          position: 'absolute',
+          left: cardMarginX,
+          right: cardMarginX,
+          top: cardTop,
+          bottom: cardBottom,
           borderRadius: s(20),
           background: 'rgba(0, 0, 0, 0.2)',
           border: `${s(1.5)}px solid rgba(255, 255, 255, 0.3)`,
@@ -182,11 +223,27 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
             position: 'relative',
             height: listHeight,
             overflow: 'hidden',
+            WebkitMaskImage: `linear-gradient(to bottom, transparent 0, black ${scrollSpacer}px, black calc(100% - ${scrollSpacer}px), transparent 100%)`,
+            maskImage: `linear-gradient(to bottom, transparent 0, black ${scrollSpacer}px, black calc(100% - ${scrollSpacer}px), transparent 100%)`,
+            WebkitMaskRepeat: 'no-repeat',
+            maskRepeat: 'no-repeat',
           }}
         >
           <div style={{transform: `translateY(${scrollY}px)`}}>
-            {items.map((item, index) => {
-              const isLast = index === items.length - 1;
+            <div
+              style={{
+                height: scrollSpacer,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: s(14),
+                letterSpacing: '0.02em',
+              }}
+            >
+              今日いちばん運がいい星座は…？
+            </div>
+            {sortedItems.map((item, index) => {
+              const isLast = index === sortedItems.length - 1;
               return (
                 <div
                   key={`${item.rank}-${item.kana}`}
@@ -258,6 +315,7 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
                 </div>
               );
             })}
+            <div style={{height: scrollSpacer}} />
           </div>
         </div>
       </div>
