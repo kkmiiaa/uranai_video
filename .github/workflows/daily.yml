@@ -13,6 +13,12 @@ on:
         description: 'Publish to Instagram (true/false)'
         required: false
         default: 'false'
+      start_date:
+        description: 'Batch start date (YYYY-MM-DD) in JST'
+        required: false
+      days:
+        description: 'Number of days for batch (e.g. 31)'
+        required: false
 
 jobs:
   build-and-render:
@@ -37,10 +43,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Resolve date
+      - name: Resolve date / range
         id: date
         run: |
-          if [ -n "${{ github.event.inputs.date }}" ]; then
+          if [ -n "${{ github.event.inputs.start_date }}" ] && [ -n "${{ github.event.inputs.days }}" ]; then
+            echo "start_date=${{ github.event.inputs.start_date }}" >> $GITHUB_OUTPUT
+            echo "days=${{ github.event.inputs.days }}" >> $GITHUB_OUTPUT
+          elif [ -n "${{ github.event.inputs.date }}" ]; then
             echo "date=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
           else
             echo "date=$(date +%F)" >> $GITHUB_OUTPUT
@@ -51,7 +60,11 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           mkdir -p out
-          npm run orchestrate -- --date ${{ steps.date.outputs.date }} --out-dir out --prompt prompts/gemini_fortune.txt
+          if [ -n "${{ steps.date.outputs.start_date }}" ]; then
+            npm run orchestrate -- --start ${{ steps.date.outputs.start_date }} --days ${{ steps.date.outputs.days }} --out-dir out --prompt prompts/gemini_fortune.txt
+          else
+            npm run orchestrate -- --date ${{ steps.date.outputs.date }} --out-dir out --prompt prompts/gemini_fortune.txt
+          fi
 
       - name: Upload to Google Cloud Storage
         env:
