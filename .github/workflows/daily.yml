@@ -23,7 +23,7 @@ on:
 jobs:
   build-and-render:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
     outputs:
       date: ${{ steps.date.outputs.date }}
       gcs_url: ${{ steps.gcs.outputs.url }}
