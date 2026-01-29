@@ -7,21 +7,18 @@ on:
   workflow_dispatch:
     inputs:
       date:
-        description: 'Target date (YYYY-MM-DD) in JST'
+        description: 'Single date (YYYY-MM-DD)'
+        required: false
+      start_date:
+        description: 'Batch start date (YYYY-MM-DD)'
+        required: false
+      end_date:
+        description: 'Batch end date (YYYY-MM-DD)'
         required: false
       publish_instagram:
         description: 'Publish to Instagram (true/false)'
         required: false
         default: 'false'
-      start_date:
-        description: 'Batch start date (YYYY-MM-DD) in JST'
-        required: false
-      days:
-        description: 'Number of days for batch (e.g. 31)'
-        required: false
-      end_date:
-        description: 'Batch end date (YYYY-MM-DD) in JST'
-        required: false
 
 jobs:
   build-and-render:
@@ -61,9 +58,6 @@ jobs:
             DAYS=$(( (END_SEC - START_SEC) / 86400 + 1 ))
             echo "start_date=$START" >> $GITHUB_OUTPUT
             echo "days=$DAYS" >> $GITHUB_OUTPUT
-          elif [ -n "${{ github.event.inputs.start_date }}" ] && [ -n "${{ github.event.inputs.days }}" ]; then
-            echo "start_date=${{ github.event.inputs.start_date }}" >> $GITHUB_OUTPUT
-            echo "days=${{ github.event.inputs.days }}" >> $GITHUB_OUTPUT
           elif [ -n "${{ github.event.inputs.date }}" ]; then
             echo "date=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
           else
