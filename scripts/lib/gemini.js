@@ -107,8 +107,8 @@ const generateFortuneJson = async ({
       },
     ],
     generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 2048,
+      temperature: 0.4,
+      maxOutputTokens: 4096,
       responseMimeType: 'application/json',
     },
   };
@@ -128,6 +128,15 @@ const generateFortuneJson = async ({
   }
 
   const data = await res.json();
+  const finishReason = data.candidates && data.candidates[0] ? data.candidates[0].finishReason : '';
+  if (finishReason && finishReason !== 'STOP') {
+    console.error(`--- Gemini finishReason: ${finishReason} ---`);
+    if (rawOutputPath) {
+      ensureDirForFile(rawOutputPath);
+      fs.writeFileSync(rawOutputPath, JSON.stringify(data, null, 2), 'utf8');
+    }
+    throw new Error(`Gemini response incomplete: finishReason=${finishReason}`);
+  }
   const text = (data.candidates || [])
     .flatMap((c) => (c.content && c.content.parts ? c.content.parts : []))
     .map((p) => p.text)
