@@ -1,0 +1,22 @@
+{
+  "date": "2026-01-29",
+  "mode": "mbti",
+  "items": [
+    {"rank": 1, "icon": "assets/zodiac/aries.png", "kana": "INTJ", "text": "計画性が冴える日。小さな改善を積み重ねるほど成果が見えてきます。"},
+    {"rank": 2, "icon": "assets/zodiac/taurus.png", "kana": "INTP", "text": "好奇心が高まり、学びが深まる日。気になるテーマを一つ掘ってみて。"},
+    {"rank": 3, "icon": "assets/zodiac/gemini.png", "kana": "ENTJ", "text": "リーダーシップが光る日。周囲の意見を拾うとさらに良い流れに。"},
+    {"rank": 4, "icon": "assets/zodiac/cancer.png", "kana": "ENTP", "text": "発想が冴える日。ひらめきをメモしておくと後で役立ちます。"},
+    {"rank": 5, "icon": "assets/zodiac/leo.png", "kana": "INFJ", "text": "人の気持ちに寄り添える日。無理をせず自分のペースを守って。"},
+    {"rank": 6, "icon": "assets/zodiac/virgo.png", "kana": "INFP", "text": "感性が豊かになる日。心が動くことを大切にしてみましょう。"},
+    {"rank": 7, "icon": "assets/zodiac/libra.png", "kana": "ENFJ", "text": "周囲との調和が生まれる日。優しい声掛けが信頼を深めます。"},
+    {"rank": 8, "icon": "assets/zodiac/scorpio.png", "kana": "ENFP", "text": "ワクワクが増える日。直感で選んだ行動が新しい縁を運びます。"},
+    {"rank": 9, "icon": "assets/zodiac/sagittarius.png", "kana": "ISTJ", "text": "着実さが武器になる日。ルーティンの見直しが効率アップに。"},
+    {"rank": 10, "icon": "assets/zodiac/capricorn.png", "kana": "ISFJ", "text": "丁寧さが評価される日。身近な人への気配りが運を呼びます。"},
+    {"rank": 11, "icon": "assets/zodiac/aquarius.png", "kana": "ESTJ", "text": "決断力が活きる日。優先順位を明確にすると迷いが減ります。"},
+    {"rank": 12, "icon": "assets/zodiac/pisces.png", "kana": "ESFJ", "text": "仲間との連携がうまくいく日。小さな感謝を言葉にして。"},
+    {"rank": 13, "icon": "assets/zodiac/aries.png", "kana": "ISTP", "text": "集中力が高まる日。ひとつの作業に没頭すると満足感が得られます。"},
+    {"rank": 14, "icon": "assets/zodiac/taurus.png", "kana": "ISFP", "text": "感性が柔らかくなる日。自分を喜ばせる時間を少しだけ。"},
+    {"rank": 15, "icon": "assets/zodiac/gemini.png", "kana": "ESTP", "text": "行動力が高まる日。軽いチャレンジが良い刺激になります。"},
+    {"rank": 16, "icon": "assets/zodiac/cancer.png", "kana": "ESFP", "text": "気分転換が大切な日。心が喜ぶ選択をしてリズムを整えて。"}
+  ]
+}

@@ -19,6 +19,9 @@ export type RankingItem = {
 
 export type DailyFortuneProps = {
   date: string;
+  titleSuffix?: string;
+  backgroundGradient?: string;
+  mode?: 'zodiac' | 'mbti';
   items: RankingItem[];
 };
 
@@ -37,7 +40,13 @@ const BASE_WIDTH = 402;
 const SCALE = 1080 / BASE_WIDTH;
 const s = (value: number) => value * SCALE;
 
-export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
+export const DailyFortune: React.FC<DailyFortuneProps> = ({
+  date,
+  items,
+  titleSuffix: titleSuffixProp,
+  backgroundGradient,
+  mode,
+}) => {
   const frame = useCurrentFrame();
   const {fps, durationInFrames} = useVideoConfig();
   const fontUrl = staticFile('fonts/ZenMaruGothic-japanese-400.woff2');
@@ -71,6 +80,16 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
     /^(\d{4})-(\d{2})-(\d{2})$/,
     '$1年$2月$3日'
   );
+  const resolvedMode =
+    mode ?? (items.length === 16 ? 'mbti' : 'zodiac');
+  const titleSuffix =
+    titleSuffixProp ??
+    (resolvedMode === 'mbti' ? '16タイプランキング' : '12星座ランキング');
+  const background =
+    backgroundGradient ??
+    (resolvedMode === 'mbti'
+      ? 'linear-gradient(180deg, #A4A #D3CFE3 100%)'
+      : 'linear-gradient(180deg, #2C2D58 0%, #4A4C8C 100%)');
 
   const stars = useMemo(() => {
     const rand = mulberry32(20260128);
@@ -131,7 +150,7 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
   return (
     <AbsoluteFill
       style={{
-        background: 'linear-gradient(180deg, #2C2D58 0%, #4A4C8C 100%)',
+        background,
         color: '#ffffff',
         fontFamily: FONT_FAMILY,
       }}
@@ -187,7 +206,7 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({date, items}) => {
             filter: `drop-shadow(0 0 ${s(5)}px rgba(253, 230, 138, 0.6)) drop-shadow(0 0 ${s(9)}px rgba(253, 230, 138, 0.4))`,
           }}
         />
-        {formattedDate}の12星座ランキング
+        {formattedDate}の{titleSuffix}
       </div>
 
       <div
