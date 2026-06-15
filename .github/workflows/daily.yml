@@ -105,17 +105,23 @@ jobs:
         run: |
           DATE="${{ steps.date.outputs.date }}"
           FORMATTED=$(date -d "$DATE" "+%Y年%-m月%-d日")
+          cat > /tmp/caption.txt << 'CAPTION_EOF'
+          CAPTION_EOF
+          printf '%s\n' \
+            "${FORMATTED}の12星座ランキング🌙" \
+            "今日いちばん運がいい星座は...？" \
+            "" \
+            "占aiでは、複数の占術データをAIで統合して、毎日の運勢をまとめています。" \
+            "" \
+            "フォローすると、毎日の占いをタイムラインで受け取れます🤍" \
+            "当たってたら、シェアして友達にも送ってみて🌙" \
+            "" \
+            "#占い #今日の運勢 #星座 #12星座 #星座占い #今日の星座 #星座ランキング #運勢 #開運 #スピリチュアル #今日のラッキー #朝の占い #毎日占い #占いアプリ #星占い #ホロスコープ #astrology #zodiac #fortunetelling #スピリチュアル女子 #引き寄せ #引き寄せの法則 #潜在意識 #自己啓発 #朝活 #朝のルーティン" \
+            > /tmp/caption.txt
+          CAPTION=$(cat /tmp/caption.txt)
           node scripts/ig-publish.js \
             --video-url "${{ steps.gcs.outputs.url }}" \
-            --caption "${FORMATTED}の12星座ランキング🌙
-今日いちばん運がいい星座は...？
-
-占aiでは、複数の占術データをAIで統合して、毎日の運勢をまとめています。
-
-フォローすると、毎日の占いをタイムラインで受け取れます🤍
-当たってたら、シェアして友達にも送ってみて🌙
-
-#占い #今日の運勢 #星座 #12星座 #星座占い #今日の星座 #星座ランキング #運勢 #開運 #スピリチュアル #今日のラッキー #朝の占い #毎日占い #占いアプリ #星占い #ホロスコープ #astrology #zodiac #fortunetelling #スピリチュアル女子 #引き寄せ #引き寄せの法則 #潜在意識 #自己啓発 #朝活 #朝のルーティン"
+            --caption "$CAPTION"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
