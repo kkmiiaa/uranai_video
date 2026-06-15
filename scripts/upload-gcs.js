@@ -37,6 +37,7 @@ const main = async () => {
 
   const uploadOptions = {
     destination: key,
+    resumable: false,
     metadata: {
       contentType: 'video/mp4',
     },
