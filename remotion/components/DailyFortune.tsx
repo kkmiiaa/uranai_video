@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {
   AbsoluteFill,
+  Audio,
   delayRender,
   Img,
   continueRender,
@@ -155,6 +156,7 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({
         fontFamily: FONT_FAMILY,
       }}
     >
+      <Audio src={staticFile('bgm/fortune.mp3')} volume={0.25} />
       <AbsoluteFill style={{pointerEvents: 'none'}}>
         {stars.map((star) => {
           const t =

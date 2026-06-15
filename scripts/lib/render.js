@@ -19,7 +19,7 @@ const renderVideo = async ({
   outPath,
   propsPath,
 }) => {
-  const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+  const npx = process.platform === 'win32' ? 'npx.cmd' : (process.env.NPX_PATH || 'npx');
   const args = [
     'remotion',
     'render',
