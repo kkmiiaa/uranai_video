@@ -34,7 +34,7 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: uranai_video
+
         run: npm ci
 
       - name: Resolve date
@@ -60,7 +60,7 @@ jobs:
           fi
 
       - name: Generate and render
-        working-directory: uranai_video
+
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
@@ -85,7 +85,7 @@ jobs:
 
       - name: Read GCS URL
         id: gcs
-        working-directory: uranai_video
+
         run: |
           DATE="${{ steps.date.outputs.date }}"
           GCS_FILE="out/gcs-${DATE}.json"
@@ -97,7 +97,7 @@ jobs:
           echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Post to Instagram
-        working-directory: uranai_video
+
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
