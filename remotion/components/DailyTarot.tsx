@@ -82,7 +82,6 @@ export const DailyTarot: React.FC<DailyTarotProps> = ({date, cards}) => {
 
   const baseSafeY = (1920 - (1080 * 5) / 4) / 2; // ≈285
   const marginX = s(24);
-  const marginRight = s(56); // Instagram右側UI（いいね等）を避けるため広め
 
   // ─── カードレイアウト（イントロ ↔ 結果）───
   const cardW = s(104);
@@ -171,7 +170,7 @@ export const DailyTarot: React.FC<DailyTarotProps> = ({date, cards}) => {
     return (
       <div style={{
         position: 'absolute',
-        top: contentAreaTop, left: marginX, right: marginRight,
+        top: contentAreaTop, left: marginX, right: marginX,
         height: contentAreaHeight,
         display: 'flex', flexDirection: 'column',
         justifyContent: 'space-between',
@@ -180,7 +179,7 @@ export const DailyTarot: React.FC<DailyTarotProps> = ({date, cards}) => {
         {/* セクションラベル */}
         <div style={{
           opacity: labelOp, textAlign: 'center',
-          fontSize: s(12), color: 'rgba(255,210,230,0.85)', letterSpacing: '0.08em',
+          fontSize: s(9), color: 'rgba(255,210,230,0.75)', letterSpacing: '0.08em',
         }}>
           {LABELS[pos]}
         </div>
