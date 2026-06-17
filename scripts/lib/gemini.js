@@ -232,7 +232,7 @@ const generateTarotJson = async ({
     contents: [{role: 'user', parts: [{text: buildTarotPrompt(date, promptPath)}]}],
     generationConfig: {
       temperature: 0.6,
-      maxOutputTokens: 1024,
+      maxOutputTokens: 4096,
       responseMimeType: 'application/json',
     },
   };
