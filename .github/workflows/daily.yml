@@ -4,8 +4,8 @@ on:
   schedule:
     # 07:00 JST (22:00 UTC previous day)
     - cron: '0 22 * * *'
-    # 14:00 JST (05:00 UTC)
-    - cron: '0 5 * * *'
+    # 08:00 JST (23:00 UTC previous day)
+    - cron: '0 23 * * *'
   workflow_dispatch:
     inputs:
       date:
@@ -138,7 +138,7 @@ jobs:
   build-and-post-tarot:
     runs-on: ubuntu-latest
     timeout-minutes: 120
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 5 * * *'
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 23 * * *'
     env:
       TZ: Asia/Tokyo
     steps:
