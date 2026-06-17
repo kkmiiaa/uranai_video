@@ -1,7 +1,6 @@
 import React from 'react';
 import {Composition, registerRoot} from 'remotion';
 import {DailyFortune, type DailyFortuneProps} from './components/DailyFortune';
-import {DailyTarot, type DailyTarotProps} from './components/DailyTarot';
 
 const defaultProps: DailyFortuneProps = {
   date: '2026-01-27',
@@ -81,39 +80,6 @@ const defaultProps: DailyFortuneProps = {
   ],
 };
 
-const defaultTarotProps: DailyTarotProps = {
-  date: '2026-01-27',
-  cards: [
-    {
-      card_index: 3, card_name_ja: '女帝', card_name_en: 'The Empress',
-      roman: 'III', symbol: '♀', hue: 140,
-      keywords: ['豊かさ', '創造', '愛情'],
-      message: '今日はあなたの持つ豊かさと創造力が輝く一日です。自分を大切にしながら周りにも愛情を。',
-      love: '温かい気持ちが伝わりやすい日です。',
-      work: '創造的なアイデアが浮かびやすい日です。',
-      lucky: '花を飾る',
-    },
-    {
-      card_index: 10, card_name_ja: '運命の輪', card_name_en: 'Wheel of Fortune',
-      roman: 'X', symbol: '☸', hue: 280,
-      keywords: ['転換', '流れ', 'チャンス'],
-      message: '今日は大きな流れに乗るチャンスです。変化を恐れずに一歩踏み出してみましょう。',
-      love: '新しい出会いの予感があります。',
-      work: '転機となる出来事が訪れそうです。',
-      lucky: '新しいルートを歩く',
-    },
-    {
-      card_index: 17, card_name_ja: '星', card_name_en: 'The Star',
-      roman: 'XVII', symbol: '★', hue: 200,
-      keywords: ['希望', '癒し', '直感'],
-      message: '今日は希望の光があなたを照らしています。自分を信じて、純粋な気持ちで進んでみて。',
-      love: '素直な気持ちが良い縁を引き寄せます。',
-      work: '直感を信じると道が開けます。',
-      lucky: '夜空を眺める',
-    },
-  ],
-};
-
 export const RemotionRoot: React.FC = () => {
   return React.createElement(
     React.Fragment,
@@ -126,15 +92,6 @@ export const RemotionRoot: React.FC = () => {
       width: 1080,
       height: 1920,
       defaultProps,
-    }),
-    React.createElement(Composition, {
-      id: 'DailyTarot',
-      component: DailyTarot,
-      durationInFrames: 1350,
-      fps: 30,
-      width: 1080,
-      height: 1920,
-      defaultProps: defaultTarotProps,
     })
   );
 };
