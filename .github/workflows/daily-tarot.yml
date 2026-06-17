@@ -89,7 +89,7 @@ jobs:
           node scripts/ig-publish.js \
             --video-url "${{ steps.gcs.outputs.url }}" \
             --caption "$CAPTION" \
-            --thumb-offset 2000
+            --thumb-offset 3000
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
