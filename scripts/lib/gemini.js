@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const {ZODIAC_BY_SIGN, ZODIAC_BY_EN} = require('./zodiac');
 const {MBTI_BY_TYPE} = require('./mbti');
+const {getCard, dateToCardIndices} = require('./tarot');
 
 const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
 const API_ROOT = 'https://generativelanguage.googleapis.com/v1beta';
@@ -166,7 +167,105 @@ const generateFortuneJson = async ({
   };
 };
 
+const POSITIONS = ['left', 'center', 'right'];
+
+const buildTarotPrompt = (date, promptPath) => {
+  const [li, ci, ri] = dateToCardIndices(date);
+  const [lc, cc, rc] = [getCard(li), getCard(ci), getCard(ri)];
+  const template = fs.readFileSync(promptPath, 'utf8');
+  return template
+    .replaceAll('{date}', date)
+    .replaceAll('{left_index}', li).replaceAll('{left_roman}', lc.roman)
+    .replaceAll('{left_name_ja}', lc.nameJa).replaceAll('{left_name_en}', lc.nameEn)
+    .replaceAll('{center_index}', ci).replaceAll('{center_roman}', cc.roman)
+    .replaceAll('{center_name_ja}', cc.nameJa).replaceAll('{center_name_en}', cc.nameEn)
+    .replaceAll('{right_index}', ri).replaceAll('{right_roman}', rc.roman)
+    .replaceAll('{right_name_ja}', rc.nameJa).replaceAll('{right_name_en}', rc.nameEn);
+};
+
+const normalizeTarotCard = (item, expectedIndex) => {
+  const card = getCard(expectedIndex);
+  if (!Array.isArray(item.keywords) || item.keywords.length < 1) {
+    throw new Error(`keywords missing for card ${expectedIndex}`);
+  }
+  if (!item.message || !item.love || !item.work || !item.lucky) {
+    throw new Error(`Missing fields for card ${expectedIndex}`);
+  }
+  return {
+    card_index: card.index,
+    card_name_ja: card.nameJa,
+    card_name_en: card.nameEn,
+    roman: card.roman,
+    symbol: card.symbol,
+    hue: card.hue,
+    keywords: item.keywords.slice(0, 3),
+    message: String(item.message).trim(),
+    love: String(item.love).trim(),
+    work: String(item.work).trim(),
+    lucky: String(item.lucky).trim(),
+  };
+};
+
+const normalizeTarotJson = (json, date) => {
+  if (!Array.isArray(json.cards) || json.cards.length !== 3) {
+    throw new Error('Expected cards array of length 3');
+  }
+  const indices = dateToCardIndices(date);
+  const cards = POSITIONS.map((pos, i) => {
+    const item = json.cards.find((c) => c.position === pos) || json.cards[i];
+    return normalizeTarotCard(item, indices[i]);
+  });
+  return {date: json.date || date, cards};
+};
+
+const generateTarotJson = async ({
+  date,
+  apiKey,
+  model = DEFAULT_MODEL,
+  promptPath,
+  rawOutputPath,
+}) => {
+  if (!apiKey) throw new Error('GEMINI_API_KEY is required');
+
+  const url = `${API_ROOT}/models/${model}:generateContent`;
+  const body = {
+    contents: [{role: 'user', parts: [{text: buildTarotPrompt(date, promptPath)}]}],
+    generationConfig: {
+      temperature: 0.6,
+      maxOutputTokens: 1024,
+      responseMimeType: 'application/json',
+    },
+  };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'x-goog-api-key': apiKey},
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Gemini API error: ${res.status} ${text}`);
+  }
+
+  const data = await res.json();
+  const finishReason = data.candidates?.[0]?.finishReason;
+  if (finishReason && finishReason !== 'STOP') {
+    throw new Error(`Gemini response incomplete: finishReason=${finishReason}`);
+  }
+  const text = (data.candidates || [])
+    .flatMap((c) => (c.content?.parts || []))
+    .map((p) => p.text)
+    .join('');
+
+  if (!text?.trim()) throw new Error('Gemini response contained no text');
+
+  const json = extractJson(text, rawOutputPath);
+  return normalizeTarotJson(json, date);
+};
+
 module.exports = {
   DEFAULT_MODEL,
   generateFortuneJson,
+  generateTarotJson,
 };

@@ -1,7 +1,7 @@
 const fs = require('fs/promises');
 const path = require('path');
 const {spawn} = require('child_process');
-const {DEFAULT_MODEL, generateFortuneJson} = require('./lib/gemini');
+const {DEFAULT_MODEL, generateFortuneJson, generateTarotJson} = require('./lib/gemini');
 const {renderVideo} = require('./lib/render');
 
 const parseArgs = (argv) => {
@@ -49,10 +49,13 @@ const main = async () => {
   const propsDir = path.join(outDir, 'props');
   const model = args.model || DEFAULT_MODEL;
   const apiKey = process.env.GEMINI_API_KEY;
+  const mode = args.mode || 'fortune'; // 'fortune' | 'tarot'
+  const isTarot = mode === 'tarot';
   const entry = args.entry || 'remotion/index.ts';
-  const composition = args.composition || 'DailyFortune';
+  const composition = args.composition || (isTarot ? 'DailyTarot' : 'DailyFortune');
+  const prefix = args.prefix || (isTarot ? 'tarot' : 'fortune');
   const keepJson = args['keep-json'] !== 'false';
-  const promptPath = args.prompt;
+  const promptPath = args.prompt || (isTarot ? 'prompts/gemini_tarot.txt' : undefined);
   const uploadGcs = args['upload-gcs'] === 'true';
   const uploadDrive = args['upload-drive'] === 'true';
   const cleanup = args.cleanup === 'true';
@@ -73,34 +76,28 @@ const main = async () => {
     process.stdout.write(`\n[${date}] generating JSON...\n`);
     let json;
     for (let attempt = 1; attempt <= 3; attempt += 1) {
-      const rawOutputPath = path.join(propsDir, `raw-${date}-attempt-${attempt}.txt`);
+      const rawOutputPath = path.join(propsDir, `raw-${prefix}-${date}-attempt-${attempt}.txt`);
       try {
-        json = await generateFortuneJson({
-          date,
-          apiKey,
-          model,
-          promptPath,
-          rawOutputPath,
-        });
+        json = isTarot
+          ? await generateTarotJson({date, apiKey, model, promptPath, rawOutputPath})
+          : await generateFortuneJson({date, apiKey, model, promptPath, rawOutputPath});
         break;
       } catch (err) {
-        if (attempt === 3) {
-          throw err;
-        }
+        if (attempt === 3) throw err;
         process.stdout.write(`[${date}] JSON parse failed, retrying (${attempt}/3)...\n`);
       }
     }
-    const propsPath = path.join(propsDir, `fortune-${date}.json`);
+    const propsPath = path.join(propsDir, `${prefix}-${date}.json`);
     await fs.writeFile(propsPath, JSON.stringify(json, null, 2), 'utf8');
 
-    const outPath = path.join(outDir, `fortune-${date}.mp4`);
+    const outPath = path.join(outDir, `${prefix}-${date}.mp4`);
     process.stdout.write(`[${date}] rendering video...\n`);
     await renderVideo({entry, composition, outPath, propsPath});
 
     if (uploadGcs) {
       const keySuffix = uploadSuffix ? `-${uploadSuffix}` : '';
-      const key = `fortune-${date}${keySuffix}.mp4`;
-      const gcsOut = path.join(outDir, `gcs-${date}.json`);
+      const key = `${prefix}-${date}${keySuffix}.mp4`;
+      const gcsOut = path.join(outDir, `gcs-${prefix}-${date}.json`);
       process.stdout.write(`[${date}] uploading to GCS...\n`);
       await run('node', [
         'scripts/upload-gcs.js',
@@ -115,8 +112,8 @@ const main = async () => {
 
     if (uploadDrive) {
       const nameSuffix = uploadSuffix ? `-${uploadSuffix}` : '';
-      const name = `fortune-${date}${nameSuffix}.mp4`;
-      const driveOut = path.join(outDir, `drive-${date}.json`);
+      const name = `${prefix}-${date}${nameSuffix}.mp4`;
+      const driveOut = path.join(outDir, `drive-${prefix}-${date}.json`);
       process.stdout.write(`[${date}] uploading to Drive...\n`);
       await run('node', [
         'scripts/upload-drive-refresh.js',
