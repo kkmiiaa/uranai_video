@@ -215,12 +215,6 @@ export const DailyTarot: React.FC<DailyTarotProps> = ({date, cards}) => {
         {/* メッセージ */}
         <div style={{opacity: msgOp}}>
           <div style={{
-            fontSize: s(10), color: 'rgba(255,210,230,0.8)', letterSpacing: '0.1em',
-            textAlign: 'center', marginBottom: s(7),
-          }}>
-            今日のメッセージ
-          </div>
-          <div style={{
             fontSize: s(14), lineHeight: 1.75, color: 'rgba(255,240,248,0.92)', textAlign: 'center',
           }}>
             {card.message}
@@ -256,7 +250,7 @@ export const DailyTarot: React.FC<DailyTarotProps> = ({date, cards}) => {
             <div key={label} style={{
               background: 'rgba(255,255,255,0.06)',
               border: `${s(1)}px solid rgba(255,180,210,0.25)`,
-              borderRadius: s(12), padding: `${s(6)}px ${s(14)}px`,
+              borderRadius: s(12), padding: `${s(6)}px ${s(8)}px`,
             }}>
               <div style={{
                 fontSize: s(9), color: accent, marginBottom: s(3), letterSpacing: '0.07em',
