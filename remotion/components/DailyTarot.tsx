@@ -82,6 +82,7 @@ export const DailyTarot: React.FC<DailyTarotProps> = ({date, cards}) => {
 
   const baseSafeY = (1920 - (1080 * 5) / 4) / 2; // ≈285
   const marginX = s(24);
+  const marginRight = s(56); // Instagram右側UI（いいね等）を避けるため広め
 
   // ─── カードレイアウト（イントロ ↔ 結果）───
   const cardW = s(104);
@@ -92,7 +93,7 @@ export const DailyTarot: React.FC<DailyTarotProps> = ({date, cards}) => {
   const cardH = s(155); // 大きさはイントロ・結果で変わらない
 
   const introCardsTop  = (1920 - cardH) / 2 - s(20); // イントロ時：画面中央より少し上
-  const resultCardsTop = s(48);                       // 結果時：上部に固定
+  const resultCardsTop = s(100);                      // 結果時：上部（アカウント名UIを避ける）
 
   // トランジション進行度（0=イントロ, 1=結果）
   const transProgress = ei(frame, INTRO_F, INTRO_F + TRANS_F, 0, 1);
@@ -149,7 +150,7 @@ export const DailyTarot: React.FC<DailyTarotProps> = ({date, cards}) => {
   // ─── セクションコンテンツ（結果エリア）───
   // カード直下〜画面下端まで flex space-between で均等配置
   const contentAreaTop = resultCardsTop + cardH + s(14);
-  const contentAreaHeight = 1920 - s(48) - contentAreaTop;
+  const contentAreaHeight = 1920 - s(80) - contentAreaTop; // 下部もUI安全圏を確保
 
   const SectionContent = ({pos, card}: {pos: number; card: CardData}) => {
     const afterStart = frame >= sectionStart(pos) + f(1.5);
@@ -170,7 +171,7 @@ export const DailyTarot: React.FC<DailyTarotProps> = ({date, cards}) => {
     return (
       <div style={{
         position: 'absolute',
-        top: contentAreaTop, left: marginX, right: marginX,
+        top: contentAreaTop, left: marginX, right: marginRight,
         height: contentAreaHeight,
         display: 'flex', flexDirection: 'column',
         justifyContent: 'space-between',

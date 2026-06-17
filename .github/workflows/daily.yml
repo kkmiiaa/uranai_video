@@ -123,7 +123,8 @@ jobs:
           CAPTION=$(cat /tmp/caption.txt)
           node scripts/ig-publish.js \
             --video-url "${{ steps.gcs.outputs.url }}" \
-            --caption "$CAPTION"
+            --caption "$CAPTION" \
+            --thumb-offset 5000
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -212,7 +213,8 @@ jobs:
           CAPTION=$(cat /tmp/tarot_caption.txt)
           node scripts/ig-publish.js \
             --video-url "${{ steps.gcs.outputs.url }}" \
-            --caption "$CAPTION"
+            --caption "$CAPTION" \
+            --thumb-offset 10000
 
       - name: Upload artifacts (tarot)
         uses: actions/upload-artifact@v4

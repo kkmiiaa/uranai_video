@@ -27,15 +27,19 @@ const main = async () => {
 
   const base = `https://graph.facebook.com/${apiVersion}`;
 
+  const thumbOffset = args['thumb-offset'];
+  const mediaParams: Record<string, string> = {
+    media_type: 'REELS',
+    video_url: videoUrl,
+    caption,
+    access_token: accessToken,
+  };
+  if (thumbOffset) mediaParams.thumb_offset = thumbOffset;
+
   const createRes = await fetch(`${base}/${igUserId}/media`, {
     method: 'POST',
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: new URLSearchParams({
-      media_type: 'REELS',
-      video_url: videoUrl,
-      caption,
-      access_token: accessToken,
-    }),
+    body: new URLSearchParams(mediaParams),
   });
 
   const createJson = await createRes.json();
