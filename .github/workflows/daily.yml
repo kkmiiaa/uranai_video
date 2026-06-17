@@ -88,7 +88,7 @@ jobs:
 
         run: |
           DATE="${{ steps.date.outputs.date }}"
-          GCS_FILE="out/gcs-${DATE}.json"
+          GCS_FILE="out/gcs-fortune-${DATE}.json"
           if [ ! -f "$GCS_FILE" ]; then
             echo "GCS file not found: $GCS_FILE" >&2
             exit 1
