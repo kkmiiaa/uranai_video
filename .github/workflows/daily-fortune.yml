@@ -1,11 +1,9 @@
-name: Daily Fortune Video
+name: Daily Fortune
 
 on:
   schedule:
     # 07:00 JST (22:00 UTC previous day)
     - cron: '0 22 * * *'
-    # 08:00 JST (23:00 UTC previous day)
-    - cron: '0 23 * * *'
   workflow_dispatch:
     inputs:
       date:
@@ -22,7 +20,6 @@ jobs:
   build-and-post:
     runs-on: ubuntu-latest
     timeout-minutes: 120
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 22 * * *'
     env:
       TZ: Asia/Tokyo
     steps:
@@ -37,7 +34,6 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-
         run: npm ci
 
       - name: Resolve date
@@ -63,7 +59,6 @@ jobs:
           fi
 
       - name: Generate and render
-
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
@@ -88,7 +83,6 @@ jobs:
 
       - name: Read GCS URL
         id: gcs
-
         run: |
           DATE="${{ steps.date.outputs.date }}"
           GCS_FILE="out/gcs-fortune-${DATE}.json"
@@ -100,7 +94,6 @@ jobs:
           echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Post to Instagram
-
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
@@ -108,8 +101,6 @@ jobs:
         run: |
           DATE="${{ steps.date.outputs.date }}"
           FORMATTED=$(date -d "$DATE" "+%Y年%-m月%-d日")
-          cat > /tmp/caption.txt << 'CAPTION_EOF'
-          CAPTION_EOF
           printf '%s\n' \
             "${FORMATTED}の12星座ランキング🌙" \
             "今日いちばん運がいい星座は...？" \
@@ -133,95 +124,5 @@ jobs:
           name: fortune-${{ steps.date.outputs.date }}
           path: |
             out/props/
-            out/gcs-*.json
-          if-no-files-found: warn
-
-  build-and-post-tarot:
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 23 * * *'
-    env:
-      TZ: Asia/Tokyo
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Resolve date
-        id: date
-        run: |
-          if [ -n "${{ github.event.inputs.date }}" ]; then
-            echo "date=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
-          else
-            echo "date=$(date +%F)" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Generate and render (tarot)
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
-          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
-        run: |
-          mkdir -p out
-          node scripts/orchestrate.js \
-            --date ${{ steps.date.outputs.date }} \
-            --mode tarot \
-            --prefix tarot \
-            --out-dir out \
-            --prompt prompts/gemini_tarot.txt \
-            --upload-gcs true
-
-      - name: Read GCS URL (tarot)
-        id: gcs
-        run: |
-          DATE="${{ steps.date.outputs.date }}"
-          GCS_FILE="out/gcs-tarot-${DATE}.json"
-          if [ ! -f "$GCS_FILE" ]; then
-            echo "GCS file not found: $GCS_FILE" >&2
-            exit 1
-          fi
-          URL=$(node -e "process.stdout.write(require('./${GCS_FILE}').url)")
-          echo "url=$URL" >> $GITHUB_OUTPUT
-
-      - name: Post to Instagram (tarot)
-        env:
-          IG_USER_ID: ${{ secrets.IG_USER_ID }}
-          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
-          IG_API_VERSION: ${{ secrets.IG_API_VERSION }}
-        run: |
-          DATE="${{ steps.date.outputs.date }}"
-          FORMATTED=$(date -d "$DATE" "+%Y年%-m月%-d日")
-          printf '%s\n' \
-            "${FORMATTED}の今日のタロット🌙" \
-            "あなたが選んだカードはどれ？" \
-            "" \
-            "占aiでは、毎日のタロット占いをAIが解説しています。" \
-            "" \
-            "フォローすると、毎日の占いをタイムラインで受け取れます🤍" \
-            "当たってたら、シェアして友達にも送ってみて🌙" \
-            "" \
-            "#タロット #タロット占い #今日のタロット #タロットカード #占い #スピリチュアル #今日の運勢 #引き寄せ #引き寄せの法則 #潜在意識 #直感 #自己啓発 #朝活 #開運 #毎日占い #tarot #tarotreading #tarotcard #oracle #spirituality" \
-            > /tmp/tarot_caption.txt
-          CAPTION=$(cat /tmp/tarot_caption.txt)
-          node scripts/ig-publish.js \
-            --video-url "${{ steps.gcs.outputs.url }}" \
-            --caption "$CAPTION" \
-            --thumb-offset 2000
-
-      - name: Upload artifacts (tarot)
-        uses: actions/upload-artifact@v4
-        with:
-          name: tarot-${{ steps.date.outputs.date }}
-          path: |
-            out/props/
-            out/gcs-tarot-*.json
+            out/gcs-fortune-*.json
           if-no-files-found: warn
