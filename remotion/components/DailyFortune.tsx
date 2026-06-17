@@ -3,6 +3,7 @@ import {
   AbsoluteFill,
   Audio,
   delayRender,
+  Easing,
   Img,
   continueRender,
   interpolate,
@@ -40,6 +41,24 @@ const mulberry32 = (seed: number) => {
 const BASE_WIDTH = 402;
 const SCALE = 1080 / BASE_WIDTH;
 const s = (value: number) => value * SCALE;
+
+type ScrollBreakpoint = {frame: number; value: number};
+
+const scrollYAtFrame = (frame: number, breakpoints: ScrollBreakpoint[]) => {
+  for (let i = 0; i < breakpoints.length - 1; i += 1) {
+    const a = breakpoints[i];
+    const b = breakpoints[i + 1];
+    if (frame <= b.frame) {
+      if (a.value === b.value) return a.value;
+      return interpolate(frame, [a.frame, b.frame], [a.value, b.value], {
+        easing: Easing.inOut(Easing.cubic),
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'clamp',
+      });
+    }
+  }
+  return breakpoints[breakpoints.length - 1].value;
+};
 
 export const DailyFortune: React.FC<DailyFortuneProps> = ({
   date,
@@ -116,36 +135,75 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({
     [0.92, 1, 0.92]
   );
 
-
-  const titleSize = s(14);
-  const dateSize = s(18);
-  const titleMargin = s(12);
-  const titleGap = s(16);
   const captionSize = s(11);
-  const captionGap = s(8);
   const cardMarginX = s(24);
-  const baseSafeY = (1920 - (1080 * 5) / 4) / 2
-  const safeTop = baseSafeY + s(30);
+  const baseSafeY = (1920 - (1080 * 5) / 4) / 2;
+  const safeTop = baseSafeY + s(40);
   const safeBottom = baseSafeY - s(10);
-  const cardTop = safeTop + titleSize + titleMargin + titleGap;
-  const cardBottom = safeBottom + captionSize + captionGap;
-  const cardPaddingX = s(24);
-  const cardPaddingY = 0;
-  const scrollSpacer = s(24);
+  // header: date (large) + subtitle
+  const headerHeight = s(80);
+  const cardTop = safeTop + headerHeight + s(12);
+  const cardBottom = safeBottom + captionSize + s(8);
+  const cardPaddingX = s(20);
 
-  const cardHeight = 1920 - cardTop - cardBottom;
-  const listHeight = cardHeight - cardPaddingY * 2;
+  const listHeight = 1920 - cardTop - cardBottom;
+  const cardGap = s(12);
+  const cardH = s(130);
+  const itemCount = sortedItems.length;
+  const scrollAtIndex = (index: number) => -index * (cardH + cardGap);
 
-  const itemHeight = s(120);
-  const contentHeight = sortedItems.length * itemHeight + scrollSpacer * 2;
-  const scrollDistance = Math.max(0, contentHeight - listHeight);
-  const scrollY = interpolate(
-    frame,
-    [0, durationInFrames - 1],
-    [0, -scrollDistance],
-    {
-      extrapolateRight: 'clamp',
+  const topThreeStartIndex = Math.max(0, itemCount - 3);
+
+  // Fit all items in durationInFrames: compute dwell dynamically
+  const transitionFrames = Math.round(0.45 * fps);
+  const longDwellRatio = 2.2; // top3 gets 2.2× base dwell
+  const {shortDwellFrames, longDwellFrames} = useMemo(() => {
+    const topCount = itemCount - topThreeStartIndex;
+    const shortCount = topThreeStartIndex;
+    const transitions = itemCount - 1;
+    // leave 1.5s for rank-1 to linger at end
+    const available = durationInFrames - Math.round(1.5 * fps) - transitions * transitionFrames;
+    const baseFrames = Math.floor(available / (shortCount + topCount * longDwellRatio));
+    return {
+      shortDwellFrames: Math.max(Math.round(0.9 * fps), baseFrames),
+      longDwellFrames: Math.max(Math.round(1.8 * fps), Math.round(baseFrames * longDwellRatio)),
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemCount, topThreeStartIndex, transitionFrames, durationInFrames, fps]);
+
+  const itemTimings = useMemo(() => {
+    const timings: {arrive: number; leave: number}[] = [];
+    let cursor = 0;
+    for (let i = 0; i < itemCount; i += 1) {
+      const dwell = i >= topThreeStartIndex ? longDwellFrames : shortDwellFrames;
+      const arrive = cursor;
+      const isLastItem = i === itemCount - 1;
+      const leave = isLastItem ? durationInFrames - 1 : arrive + dwell;
+      timings.push({arrive, leave});
+      cursor = leave + transitionFrames;
     }
+    return timings;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemCount, shortDwellFrames, longDwellFrames, transitionFrames, topThreeStartIndex, durationInFrames]);
+
+  const scrollBreakpoints = useMemo(() => {
+    const points: ScrollBreakpoint[] = [{frame: 0, value: scrollAtIndex(0)}];
+    itemTimings.forEach(({arrive, leave}, i) => {
+      points.push({frame: arrive, value: scrollAtIndex(i)});
+      points.push({frame: leave, value: scrollAtIndex(i)});
+    });
+    return points;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemTimings, listHeight, cardH, cardGap, itemCount]);
+
+  const scrollY = scrollYAtFrame(frame, scrollBreakpoints);
+
+  const topRankTiming = itemTimings[itemTimings.length - 1];
+  const emphasisProgress = interpolate(
+    frame,
+    [topRankTiming.arrive, topRankTiming.arrive + Math.round(0.4 * fps)],
+    [0, 1],
+    {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}
   );
 
   return (
@@ -185,51 +243,51 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({
         })}
       </AbsoluteFill>
 
+      {/* ヘッダー：日付（大きく）＋サブタイトル */}
       <div
         style={{
           position: 'absolute',
           left: cardMarginX,
           right: cardMarginX,
-          top: safeTop + s(8),
-          fontSize: titleSize,
+          top: safeTop,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          gap: s(10),
-          color: '#DDDDDD',
+          gap: s(6),
         }}
       >
-        <Img
-          src={staticFile('assets/moon.png')}
+        <div
           style={{
-            width: s(20),
-            height: s(20),
-            transform: `translateY(${s(2)}px) scale(${moonPulse})`,
-            filter: `drop-shadow(0 0 ${s(5)}px rgba(253, 230, 138, 0.6)) drop-shadow(0 0 ${s(9)}px rgba(253, 230, 138, 0.4))`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: s(10),
+            fontSize: s(26),
+            fontWeight: 700,
+            letterSpacing: '0.04em',
+            color: '#FDE68A',
+            textShadow: `0 0 ${s(12)}px rgba(253, 230, 138, 0.5)`,
           }}
-        />
-        {formattedDate}の{titleSuffix}
-      </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          left: cardMarginX,
-          right: cardMarginX,
-          top: safeTop - s(40),
-          fontSize: s(20),
-          fontWeight: 600,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          letterSpacing: '0.02em',
-          textDecoration: 'underline',
-          textDecorationColor: 'rgba(255, 255, 255, 1)',
-          textDecorationThickness: s(1.5),
-          textUnderlineOffset: s(10),
-        }}
-      >
-        今日いちばん運がいい星座は…？
+        >
+          <Img
+            src={staticFile('assets/moon.png')}
+            style={{
+              width: s(24),
+              height: s(24),
+              transform: `scale(${moonPulse})`,
+              filter: `drop-shadow(0 0 ${s(6)}px rgba(253, 230, 138, 0.8))`,
+            }}
+          />
+          {formattedDate}
+        </div>
+        <div
+          style={{
+            fontSize: s(13),
+            color: 'rgba(255,255,255,0.7)',
+            letterSpacing: '0.06em',
+          }}
+        >
+          {titleSuffix}
+        </div>
       </div>
 
       <div
@@ -239,70 +297,103 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({
           right: cardMarginX,
           top: cardTop,
           bottom: cardBottom,
-          borderRadius: s(20),
-          background: 'rgba(0, 0, 0, 0.2)',
-          border: `${s(1.5)}px solid rgba(255, 255, 255, 0.3)`,
-          padding: `${cardPaddingY}px ${cardPaddingX}px`,
-          boxSizing: 'border-box',
         }}
       >
 
-        <div
-          style={{
-            position: 'relative',
-            height: listHeight,
-            overflow: 'hidden',
-            WebkitMaskImage: `linear-gradient(to bottom, transparent 0, black ${scrollSpacer}px, black calc(100% - ${scrollSpacer}px), transparent 100%)`,
-            maskImage: `linear-gradient(to bottom, transparent 0, black ${scrollSpacer}px, black calc(100% - ${scrollSpacer}px), transparent 100%)`,
-            WebkitMaskRepeat: 'no-repeat',
-            maskRepeat: 'no-repeat',
-          }}
-        >
-          <div style={{transform: `translateY(${scrollY}px)`}}>
-            <div style={{height: s(30)}} />
+        <div style={{position: 'relative', height: listHeight}}>
+          <div
+            style={{
+              transform: `translateY(${scrollY}px)`,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: cardGap,
+              paddingTop: listHeight / 2 - cardH / 2,
+              paddingBottom: listHeight / 2 - cardH / 2,
+              paddingLeft: s(6),
+              paddingRight: s(6),
+            }}
+          >
             {sortedItems.map((item, index) => {
-              const isLast = index === sortedItems.length - 1;
+              const isTopRank = item.rank === 1;
+              const rowEmphasis = isTopRank ? emphasisProgress : 0;
+
+              // distance from center (in pixels) for fade effect
+              const cardCenterY =
+                (listHeight / 2 - cardH / 2) +
+                index * (cardH + cardGap) +
+                scrollY +
+                cardH / 2;
+              const distFromCenter = Math.abs(cardCenterY - listHeight / 2);
+              // 上下1枚まで表示、2枚目以降は完全透明
+              const fadeRange = 1.4 * (cardH + cardGap);
+              const rawFade = Math.max(0, Math.min(1, 1 - distFromCenter / fadeRange));
+              const proximityFade = rawFade;
+              // 中央カード（非1位）の白グロー強度：止まって中央に来たときだけ光る
+              const centerGlow = isTopRank ? 0 : Math.pow(rawFade, 5) * (1 - emphasisProgress);
+              // 1位が来たら他のカードを消す
+              const endingFade = isTopRank ? 0 : emphasisProgress * 0.95;
+
               return (
                 <div
                   key={`${item.rank}-${item.kana}`}
                   style={{
                     display: 'flex',
-                    gap: s(12),
-                    padding: `${s(12)}px 0`,
-                    borderBottom: isLast
-                      ? 'none'
-                      : `${s(1)}px solid rgba(255, 255, 255, 0.2)`,
-                    minHeight: itemHeight - s(24),
+                    gap: s(14),
+                    padding: `${s(14)}px ${cardPaddingX}px`,
+                    height: cardH,
+                    boxSizing: 'border-box',
                     alignItems: 'center',
+                    borderRadius: s(18),
+                    flexShrink: 0,
+                    background:
+                      rowEmphasis > 0
+                        ? `linear-gradient(135deg, rgba(253,230,138,${0.28 * rowEmphasis}) 0%, rgba(80,82,140,0.9) 100%)`
+                        : 'rgba(55, 57, 105, 0.88)',
+                    border: rowEmphasis > 0
+                      ? `${s(1.5)}px solid rgba(253, 230, 138, ${0.7 * rowEmphasis})`
+                      : `${s(1)}px solid rgba(255, 255, 255, 0.18)`,
+                    boxShadow:
+                      rowEmphasis > 0
+                        ? `0 0 ${s(30 * rowEmphasis)}px rgba(253, 230, 138, ${0.55 * rowEmphasis}), 0 0 ${s(60 * rowEmphasis)}px rgba(253, 230, 138, ${0.2 * rowEmphasis}), 0 ${s(4)}px ${s(16)}px rgba(0,0,0,0.25)`
+                        : centerGlow > 0
+                        ? `0 0 ${s(20 * centerGlow)}px rgba(255, 255, 255, ${0.3 * centerGlow}), 0 ${s(2)}px ${s(10)}px rgba(0,0,0,0.2)`
+                        : `0 ${s(2)}px ${s(10)}px rgba(0, 0, 0, 0.2)`,
+                    opacity: proximityFade * (1 - endingFade),
+                    transform: `scale(${0.88 + 0.12 * proximityFade + 0.04 * rowEmphasis})`,
+                    backdropFilter: 'blur(8px)',
                   }}
                 >
                   <div
                     style={{
-                      width: s(24),
+                      width: s(30),
                       textAlign: 'center',
-                      fontSize: s(16),
+                      fontSize: s(18),
+                      fontWeight: rowEmphasis > 0 ? 700 : 500,
                       opacity: 0.9,
                       alignSelf: 'center',
+                      color: rowEmphasis > 0 ? '#FDE68A' : 'rgba(255,255,255,0.7)',
+                      flexShrink: 0,
                     }}
                   >
-                    {item.rank}.
+                    {item.rank}
                   </div>
 
                   <div
                     style={{
-                      width: s(40),
+                      width: s(52),
                       textAlign: 'center',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      flexShrink: 0,
                     }}
                   >
                     <div
                       style={{
-                        width: s(28),
-                        height: s(28),
-                        margin: `0 auto ${s(2)}px`,
+                        width: s(36),
+                        height: s(36),
+                        margin: `0 auto ${s(3)}px`,
                       }}
                     >
                       <Img
@@ -311,21 +402,31 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({
                           width: '100%',
                           height: '100%',
                           filter: 'brightness(0) invert(1)',
+                          opacity: 0.95,
                         }}
                       />
                     </div>
-                    <div style={{fontSize: s(9), opacity: 0.8}}>{item.kana}</div>
+                    <div style={{fontSize: s(10), opacity: 0.75, letterSpacing: '0.02em'}}>{item.kana}</div>
                   </div>
+
+                  <div
+                    style={{
+                      width: s(1),
+                      height: s(50),
+                      background: 'rgba(255,255,255,0.18)',
+                      flexShrink: 0,
+                      borderRadius: s(1),
+                    }}
+                  />
 
                   <div
                     style={{
                       flex: 1,
                       fontSize: s(13),
-                      lineHeight: 1.5,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
+                      lineHeight: 1.7,
+                      opacity: 0.92,
+                      wordBreak: 'break-all',
+                      overflowWrap: 'anywhere',
                     }}
                   >
                     {item.text}
@@ -333,7 +434,6 @@ export const DailyFortune: React.FC<DailyFortuneProps> = ({
                 </div>
               );
             })}
-            <div style={{height: scrollSpacer}} />
           </div>
         </div>
       </div>
