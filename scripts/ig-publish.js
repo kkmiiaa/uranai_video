@@ -28,7 +28,7 @@ const main = async () => {
   const base = `https://graph.facebook.com/${apiVersion}`;
 
   const thumbOffset = args['thumb-offset'];
-  const mediaParams: Record<string, string> = {
+  const mediaParams = {
     media_type: 'REELS',
     video_url: videoUrl,
     caption,
