@@ -135,14 +135,16 @@ export const DailyTarot: React.FC<DailyTarotProps> = ({date, cards}) => {
     );
   };
 
-  const CardBack = () => (
+  const CardBack = ({pos}: {pos: number}) => (
     <div style={{
       position: 'absolute', inset: 0,
       background: 'linear-gradient(145deg, #7C3AED 0%, #A855F7 50%, #7C3AED 100%)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <div style={{position: 'absolute', inset: s(6), border: `${s(1)}px solid rgba(255,255,255,0.3)`, borderRadius: s(8)}} />
-      <div style={{fontSize: s(22), color: 'rgba(255,255,255,0.4)'}}>✦</div>
+      <div style={{fontSize: s(36), fontWeight: 700, color: 'rgba(255,255,255,0.85)', fontFamily: FONT_FAMILY, letterSpacing: '0.05em'}}>
+        {['A', 'B', 'C'][pos]}
+      </div>
     </div>
   );
 
@@ -164,7 +166,7 @@ export const DailyTarot: React.FC<DailyTarotProps> = ({date, cards}) => {
     const detailOp = ei(local, f(6.2), f(7.8), 0, 1);
     const luckyOp  = ei(local, f(8.2), f(9.2), 0, 1);
 
-    const LABELS = ['← 左を選んだあなたへ', '↓ 中を選んだあなたへ', '→ 右を選んだあなたへ'];
+    const LABELS = ['Aを選んだあなたへ', 'Bを選んだあなたへ', 'Cを選んだあなたへ'];
     const accent = 'rgba(255, 230, 245, 0.9)';
 
     return (
@@ -379,7 +381,7 @@ export const DailyTarot: React.FC<DailyTarotProps> = ({date, cards}) => {
               ? `0 0 ${s(28 * glowP)}px hsla(${card.hue},65%,60%,${glowP * 0.6}), 0 ${s(4)}px ${s(18)}px rgba(0,0,0,0.45)`
               : `0 ${s(4)}px ${s(16)}px rgba(0,0,0,0.4)`,
           }}>
-            {showFront ? <CardFace card={card} /> : <CardBack />}
+            {showFront ? <CardFace card={card} /> : <CardBack pos={pos} />}
           </div>
         );
       })}
