@@ -2,8 +2,8 @@ name: Daily Tarot
 
 on:
   schedule:
-    # 20:00 JST (11:00 UTC)
-    - cron: '0 11 * * *'
+    # 19:00 JST (10:00 UTC)
+    - cron: '0 10 * * *'
   workflow_dispatch:
     inputs:
       date:
