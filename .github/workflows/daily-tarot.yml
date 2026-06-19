@@ -2,8 +2,8 @@ name: Daily Tarot
 
 on:
   schedule:
-    # ~20:00 JST (07:00 UTC, 4h buffer for GH Actions delay)
-    - cron: '0 7 * * *'
+    # ~20:00 JST (07:30 UTC, offset from :00 to reduce GH Actions queue delay)
+    - cron: '30 7 * * *'
   workflow_dispatch:
     inputs:
       date:

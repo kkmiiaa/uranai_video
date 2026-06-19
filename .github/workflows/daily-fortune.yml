@@ -2,8 +2,8 @@ name: Daily Fortune
 
 on:
   schedule:
-    # 06:00 JST (21:00 UTC previous day)
-    - cron: '0 21 * * *'
+    # ~06:00 JST (21:30 UTC previous day, offset from :00 to reduce GH Actions queue delay)
+    - cron: '30 21 * * *'
   workflow_dispatch:
     inputs:
       date:
