@@ -2,8 +2,8 @@ name: Daily Tarot
 
 on:
   schedule:
-    # 07:00 JST (22:00 UTC previous day)
-    - cron: '0 22 * * *'
+    # 20:00 JST (11:00 UTC)
+    - cron: '0 11 * * *'
   workflow_dispatch:
     inputs:
       date:
@@ -36,7 +36,7 @@ jobs:
           if [ -n "${{ github.event.inputs.date }}" ]; then
             echo "date=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
           else
-            echo "date=$(date +%F)" >> $GITHUB_OUTPUT
+            echo "date=$(date -d '+1 day' +%F)" >> $GITHUB_OUTPUT
           fi
 
       - name: Generate and render
@@ -75,7 +75,7 @@ jobs:
           DATE="${{ steps.date.outputs.date }}"
           FORMATTED=$(date -d "$DATE" "+%Y年%-m月%-d日")
           printf '%s\n' \
-            "${FORMATTED}の今日のタロット🌙" \
+            "${FORMATTED}の明日のタロット🌙" \
             "あなたが選んだカードはどれ？" \
             "" \
             "占aiでは、毎日のタロット占いをAIが解説しています。" \
