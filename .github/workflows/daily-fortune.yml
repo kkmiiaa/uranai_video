@@ -2,8 +2,8 @@ name: Daily Fortune
 
 on:
   schedule:
-    # 07:00 JST (22:00 UTC previous day)
-    - cron: '0 22 * * *'
+    # 06:00 JST (21:00 UTC previous day)
+    - cron: '0 21 * * *'
   workflow_dispatch:
     inputs:
       date:
