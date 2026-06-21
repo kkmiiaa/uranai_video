@@ -100,10 +100,9 @@ export const DailyTarot: React.FC<DailyTarotProps> = ({date, cards}) => {
   const cardsTop = introCardsTop + (resultCardsTop - introCardsTop) * transProgress;
 
   // ─── イントロアニメーション ───
-  const headerOpacity  = ei(frame, 0,      f(1.0), 0, 1) * ei(frame, INTRO_F, INTRO_F + TRANS_F, 1, 0);
-  const cardsOpacity   = ei(frame, f(0.8), f(2.0), 0, 1);
-  const cardsSlideY    = ei(frame, f(0.8), f(2.0), s(150), 0);
-  const chooseTextOp   = ei(frame, f(1.6), f(2.5), 0, 1) * ei(frame, INTRO_F, INTRO_F + f(0.5), 1, 0);
+  const cardsOpacity   = ei(frame, 0,      f(0.6), 0, 1);
+  const cardsSlideY    = ei(frame, 0,      f(0.6), s(80), 0);
+  const chooseTextOp   = ei(frame, f(0.3), f(1.0), 0, 1) * ei(frame, INTRO_F, INTRO_F + f(0.5), 1, 0);
 
   // ─── セクション ───
   const sectionStart = (pos: number) => RESULTS_START + pos * SEC_F;
@@ -313,32 +312,34 @@ export const DailyTarot: React.FC<DailyTarotProps> = ({date, cards}) => {
         );
       })}
 
-      {/* ヘッダー（イントロのみ表示、トランジションでフェードアウト） */}
-      <div style={{
-        position: 'absolute', top: baseSafeY + s(28), left: marginX, right: marginX,
-        opacity: headerOpacity, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', gap: s(5), pointerEvents: 'none',
-      }}>
-        <div style={{fontSize: s(11), color: 'rgba(255,220,240,0.8)', letterSpacing: '0.13em'}}>
-          ✦ 今日のタロット ✦
-        </div>
-        <div style={{
-          fontSize: s(26), fontWeight: 700, color: '#FFE4F0', letterSpacing: '0.04em',
-          textShadow: `0 0 ${s(14)}px rgba(232,160,176,0.5)`,
-        }}>
-          {formattedDate}
-        </div>
-      </div>
-
-      {/* 「カードを選んでください」テキスト（イントロのみ） */}
+      {/* 「直感で1枚を選んで」＋日付サブテキスト（イントロのみ・アイキャッチ） */}
       <div style={{
         position: 'absolute',
-        top: introCardsTop + cardH + s(24),
+        top: introCardsTop - s(120),
         left: marginX, right: marginX,
         opacity: chooseTextOp, textAlign: 'center',
-        fontSize: s(14), color: 'rgba(255,220,235,0.75)', letterSpacing: '0.06em',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: s(8),
+        pointerEvents: 'none',
       }}>
-        直感でカードを選んでください
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: s(10),
+          fontSize: s(22), fontWeight: 700,
+          color: '#FFE4F0', letterSpacing: '0.04em',
+          textShadow: `0 0 ${s(16)}px rgba(232,160,176,0.6)`,
+        }}>
+          <svg width={s(20)} height={s(20)} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="2" width="14" height="20" rx="2" stroke="#FFE4F0" strokeWidth="1.5" fill="rgba(255,228,240,0.15)"/>
+            <line x1="6" y1="7" x2="13" y2="7" stroke="#FFE4F0" strokeWidth="1.2" strokeLinecap="round"/>
+            <line x1="6" y1="10" x2="13" y2="10" stroke="#FFE4F0" strokeWidth="1.2" strokeLinecap="round"/>
+            <line x1="6" y1="13" x2="10" y2="13" stroke="#FFE4F0" strokeWidth="1.2" strokeLinecap="round"/>
+          </svg>
+          直感で1枚を選んで
+        </div>
+        <div style={{
+          fontSize: s(11), color: 'rgba(255,220,240,0.65)', letterSpacing: '0.06em',
+        }}>
+          {formattedDate}のタロット占い
+        </div>
       </div>
 
       {/* 3枚のカード（イントロ→結果でY・H をアニメーション） */}

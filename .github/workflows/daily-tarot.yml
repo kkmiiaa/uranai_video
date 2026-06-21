@@ -75,15 +75,17 @@ jobs:
           DATE="${{ steps.date.outputs.date }}"
           FORMATTED=$(date -d "$DATE" "+%Y年%-m月%-d日")
           printf '%s\n' \
-            "${FORMATTED}の明日のタロット🌙" \
-            "あなたが選んだカードはどれ？" \
+            "選んだカードをコメントで教えて👇" \
+            "A・B・C、どれを選んだ？" \
+            "" \
+            "直感で1枚を選んで🌙" \
+            "${FORMATTED}のタロット占い" \
             "" \
             "占aiでは、毎日のタロット占いをAIが解説しています。" \
-            "" \
             "フォローすると、毎日の占いをタイムラインで受け取れます🤍" \
             "当たってたら、シェアして友達にも送ってみて🌙" \
             "" \
-            "#タロット #タロット占い #今日のタロット #タロットカード #占い #スピリチュアル #今日の運勢 #引き寄せ #引き寄せの法則 #潜在意識 #直感 #自己啓発 #朝活 #開運 #毎日占い #tarot #tarotreading #tarotcard #oracle #spirituality" \
+            "#タロット #タロット占い #今日のタロット #タロットカード #占い #スピリチュアル #今日の運勢 #引き寄せ #引き寄せの法則 #潜在意識 #直感 #自己啓発 #朝活 #開運 #毎日占い #スピリチュアル女子 #占いアプリ #朝のルーティン #tarot #tarotreading #tarotcard #oracle #spirituality #astrology #tarotcommunity" \
             > /tmp/tarot_caption.txt
           CAPTION=$(cat /tmp/tarot_caption.txt)
           node scripts/ig-publish.js \
