@@ -130,7 +130,7 @@ export const RemotionRoot: React.FC = () => {
     React.createElement(Composition, {
       id: 'DailyTarot',
       component: DailyTarot,
-      durationInFrames: 1350,
+      durationInFrames: 1260,
       fps: 30,
       width: 1080,
       height: 1920,

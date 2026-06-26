@@ -54,7 +54,7 @@ const ei = (frame: number, s1: number, e1: number, from: number, to: number) =>
   });
 
 // フレーム定数
-const INTRO_F  = 150; // イントロ長さ（5s）
+const INTRO_F  = 60; // イントロ長さ（2s）
 const TRANS_F  = 30;  // カード移動トランジション（1s）
 const SEC_F    = 390; // 各セクション（13s）
 // 合計: 75 + 30 + 390×3 = 1275f = 42.5s
